@@ -2,11 +2,6 @@ server:
   port: 8080
 
 spring:
-  r2dbc:
-    url: r2dbc:mariadb://localhost:13306/test
-    username: admin
-    password: 1234
-
   cloud:
     gateway:
       routes:
@@ -23,7 +18,7 @@ spring:
           filters:
             - StripPrefix=1
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -33,7 +28,10 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
-
+  r2dbc:
+    url: r2dbc:mariadb://localhost:13306/test
+    username: admin
+    password: 1234
 jwt:
   secret: a0123456789b0123456789c0123456789d
   refresh-token-validity-seconds: 1209600  # 14일

@@ -1,4 +1,4 @@
-package com.msa.common.kafka;
+package com.msa.common.kafka.publisher;
 
 import com.msa.common.kafka.provider.KafkaEventProvider;
 import lombok.RequiredArgsConstructor;
