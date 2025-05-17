@@ -1,0 +1,11 @@
+server:
+  port: 8082
+
+spring:
+  r2dbc:
+    url: r2dbc:mariadb://localhost:13306/test
+    username: admin
+    password: 1234
+  main:
+    web-application-type: reactive
+

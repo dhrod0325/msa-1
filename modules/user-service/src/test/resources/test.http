@@ -1,0 +1,17 @@
+### 1. 로그인
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "1234"
+}
+
+> {%
+    // 로그인 후 응답에서 accessToken 필드만 추출하여 전역 변수에 저장
+    client.global.set("accessToken", response.body.accessToken);
+%}
+
+### 2. 인증된 요청
+GET http://localhost:8080/user/users
+Authorization: Bearer {{accessToken}}

@@ -1,0 +1,8 @@
+rootProject.name = "msa-1"
+
+include(
+        "modules:common-library",
+        "modules:auth-service",
+        "modules:api-gateway",
+        "modules:user-service"
+)
