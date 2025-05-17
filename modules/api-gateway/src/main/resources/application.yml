@@ -2,6 +2,11 @@ server:
   port: 8080
 
 spring:
+  r2dbc:
+    url: r2dbc:mariadb://localhost:13306/test
+    username: admin
+    password: 1234
+
   cloud:
     gateway:
       routes:
@@ -17,6 +22,17 @@ spring:
             - Path=/user/**
           filters:
             - StripPrefix=1
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: my-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
 
 jwt:
   secret: a0123456789b0123456789c0123456789d

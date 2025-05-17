@@ -1,6 +1,7 @@
 dependencies {
     implementation project(":modules:common-library")
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
     implementation "io.netty:netty-resolver-dns-native-macos:4.1.109.Final:osx-aarch_64"
