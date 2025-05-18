@@ -3,7 +3,6 @@ package com.msa.gateway.filter;
 import com.msa.common.jwt.JwtException;
 import com.msa.common.jwt.JwtProvider;
 import com.msa.common.jwt.JwtResult;
-import com.msa.common.kafka.publisher.KafkaEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -15,25 +14,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtGatewayFilter implements GlobalFilter, Ordered {
     private final JwtProvider jwtProvider;
 
-    private final KafkaEventPublisher kafkaEventPublisher;
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-
-        Map<String, Object> param = new HashMap<>();
-        param.put("path", path);
-
-        kafkaEventPublisher.publish("gateway", "filter", param);
 
         if (isExcludedPath(path)) {
             return chain.filter(exchange);

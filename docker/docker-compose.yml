@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mariadb:
     image: mariadb:latest
-    container_name: mariadb
+    container_name: msa-mariadb
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: 1234
@@ -12,7 +12,7 @@ services:
       MARIADB_PASSWORD: 1234
       TZ: Asia/Seoul
     ports:
-      - "13306:3306"
+      - "23306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
 

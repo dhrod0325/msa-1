@@ -5,10 +5,16 @@ spring:
   main:
     web-application-type: reactive
   r2dbc:
-    url: r2dbc:mariadb://localhost:13306/test
+    url: r2dbc:mariadb://localhost:23306/test
     username: admin
     password: 1234
-
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: my-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 jwt:
   secret: a0123456789b0123456789c0123456789d
   refresh-token-validity-seconds: 1209600  # 14일

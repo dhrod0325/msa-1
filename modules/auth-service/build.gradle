@@ -4,6 +4,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation "io.netty:netty-resolver-dns-native-macos:4.1.109.Final:osx-aarch_64"
+    implementation 'org.springframework.kafka:spring-kafka'
 
     implementation project(':modules:common-library')
 

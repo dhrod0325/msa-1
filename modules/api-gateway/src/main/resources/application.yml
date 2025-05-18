@@ -29,7 +29,7 @@ spring:
       properties:
         spring.json.trusted.packages: "*"
   r2dbc:
-    url: r2dbc:mariadb://localhost:13306/test
+    url: r2dbc:mariadb://localhost:23306/test
     username: admin
     password: 1234
 jwt:
