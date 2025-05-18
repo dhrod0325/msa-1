@@ -5,6 +5,9 @@ include(
         "modules:auth-service",
         "modules:api-gateway",
         "modules:user-service",
+        "modules:user-site-service",
+        "modules:admin-site-service",
+
         "plugins:config-server",
         "plugins:eureka-server"
 )

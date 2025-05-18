@@ -1,0 +1,10 @@
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    implementation project(':modules:common-library')
+
+    runtimeOnly 'org.mariadb:r2dbc-mariadb:1.1.4'
+}

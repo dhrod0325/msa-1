@@ -1,9 +1,9 @@
 package com.msa.common.kafka.events;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 public interface BaseEvent {
     String getEventType();
 
-    Instant getCreatedAt();
+    LocalDateTime getCreatedAt();
 }

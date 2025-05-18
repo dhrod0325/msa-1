@@ -24,6 +24,8 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
+        log.info("path: {}", path);
+
         if (isExcludedPath(path)) {
             return chain.filter(exchange);
         }
@@ -44,8 +46,8 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
             ServerWebExchange mutatedExchange = exchange.mutate()
                     .request(builder -> builder
                             .header("X-User-Id", userId)
-                            .header("X-User-Roles", roles)
-                    ).build();
+                            .header("X-User-Roles", roles))
+                    .build();
 
             log.info("인증 완료: userId={}, roles={}, URI={}", userId, roles, exchange.getRequest().getURI());
 
@@ -62,16 +64,15 @@ public class JwtGatewayFilter implements GlobalFilter, Ordered {
 
     private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-
         log.warn("요청 거부: {}", message);
-
         return exchange.getResponse().setComplete();
     }
 
     private boolean isExcludedPath(String path) {
         return path.startsWith("/auth/login")
                 || path.startsWith("/auth/signup")
-                || path.startsWith("/auth/refresh");
+                || path.startsWith("/auth/refresh")
+                || path.startsWith("/site");
     }
 
     @Override

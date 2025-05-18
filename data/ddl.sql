@@ -32,7 +32,51 @@ CREATE TABLE `users`
 BEGIN;
 INSERT INTO `users` (`id`, `username`, `password`, `role`)
 VALUES (1, 'admin', '$2a$10$ExVtl13B8ZBW.ykAGW9hMOijg/be1Xr49LDG.3zYRwzZK.SwmS6m2', NULL);
+
 COMMIT;
 
-SET
-FOREIGN_KEY_CHECKS = 1;
+CREATE TABLE site
+(
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    site_code   VARCHAR(50)  NOT NULL UNIQUE COMMENT '사이트 식별자 (ex: site1, site2)',
+    name        VARCHAR(100) NOT NULL COMMENT '사이트 이름',
+    domain      VARCHAR(100) DEFAULT NULL COMMENT '서브도메인 (선택)',
+    path_prefix VARCHAR(100) DEFAULT NULL COMMENT '서브패스 (ex: /site1)',
+    is_active   BOOLEAN      DEFAULT TRUE COMMENT '사이트 활성화 여부',
+    created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE site_user
+(
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    site_id    BIGINT       NOT NULL COMMENT 'site 테이블의 외래키',
+    username   VARCHAR(50)  NOT NULL COMMENT '로그인 ID',
+    password   VARCHAR(255) NOT NULL COMMENT 'BCrypt 암호화된 비밀번호',
+    name       VARCHAR(100) NOT NULL,
+    email      VARCHAR(100),
+    role       ENUM('USER', 'MODERATOR') DEFAULT 'USER',
+    is_enabled BOOLEAN  DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_site_user_site FOREIGN KEY (site_id)
+        REFERENCES site (id)
+        ON DELETE CASCADE,
+
+    UNIQUE KEY uq_site_user (site_id, username)
+);
+
+BEGIN;
+
+-- 사이트 등록
+INSERT INTO site (site_code, name, path_prefix)
+VALUES ('site1', '경북대학교', '/site1'),
+       ('site2', '부산대학교', '/site2');
+
+-- 사용자 등록
+INSERT INTO site_user (site_id, username, password, name, email)
+VALUES (1, 'hong123', '$2a$10$hash된값', '홍길동', 'hong@site1.com'),
+       (2, 'lee456', '$2a$10$hash된값', '이순신', 'lee@site2.com');
+
+commit;
