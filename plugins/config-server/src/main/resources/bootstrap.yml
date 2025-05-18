@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: config-service
+  cloud:
+    config:
+      enabled: false  # Config Server 자체는 설정을 가져오지 않음 

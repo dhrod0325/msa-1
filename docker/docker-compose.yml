@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  config-server:
+    build: ../plugins/config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../plugins/config-server/config-repo:/config-repo
+    networks:
+      - msa-net
+  eureka-server:
+    build: ../plugins/eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - msa-net
   mariadb:
     image: mariadb:latest
     container_name: msa-mariadb
@@ -42,3 +58,7 @@ services:
 
 volumes:
   mariadb_data:
+
+networks:
+  msa-net:
+

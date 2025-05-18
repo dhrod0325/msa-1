@@ -1,6 +1,7 @@
 buildscript {
     ext {
         springBootVersion = '3.2.5'
+        springCloudVersion = '2023.0.1'
     }
     repositories {
         mavenCentral()
@@ -32,5 +33,11 @@ allprojects {
         testAnnotationProcessor 'org.projectlombok:lombok'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
     }
 }
