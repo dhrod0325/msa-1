@@ -71,6 +71,3 @@ jwt:
   secret: a0123456789b0123456789c0123456789d
   refresh-token-validity-seconds: 1209600  # 14일
   access-token-validity-seconds: 3600
-
-test:
-  name: ${EXAMPLE_NAME:world}
