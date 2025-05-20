@@ -1,21 +1,23 @@
 package com.msa.common.jwt;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtProvider {
-    @Getter
     private final JwtProperties jwtProperties;
     private Key key;
 
@@ -28,17 +30,28 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // access 토큰
+    public String generateAccessToken(String subject, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", role);
+
+        return generateAccessToken(subject, claims);
+    }
+
     public String generateAccessToken(String subject, Map<String, Object> claims) {
         return generateToken(subject, claims, jwtProperties.getAccessTokenValiditySeconds());
     }
 
-    // refresh 토큰
-    public String generateRefreshToken(String subject) {
-        return generateToken(subject, Map.of(), jwtProperties.getRefreshTokenValiditySeconds());
+    public String generateRefreshToken(String subject, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", role);
+
+        return generateRefreshToken(subject, claims);
     }
 
-    // 토큰 생성
+    public String generateRefreshToken(String subject, Map<String, Object> claims) {
+        return generateToken(subject, claims, jwtProperties.getRefreshTokenValiditySeconds());
+    }
+
     public String generateToken(String subject, Map<String, Object> claims, long expirySeconds) {
         return Jwts.builder()
                 .setSubject(subject)
@@ -49,7 +62,6 @@ public class JwtProvider {
                 .compact();
     }
 
-    // 토큰 검증 후 claims 추출
     public Claims validateAndGetClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -58,20 +70,17 @@ public class JwtProvider {
                 .getBody();
     }
 
-    // 사용자 정보 추출
-    public String extractUsername(String token) {
-        return validateAndGetClaims(token).getSubject();
-    }
-
-    // 검증 + 결과 객체 반환
     public JwtResult validate(String token) {
         try {
             Claims claims = validateAndGetClaims(token);
             String userId = claims.getSubject();
             String roles = claims.get("roles", String.class);
-            return new JwtResult(userId, roles);
+
+            return new JwtResult(userId, roles, true);
         } catch (JwtException e) {
-            throw new JwtException();
+            log.error(e.getMessage(), e);
+
+            return new JwtResult(null, null, false);
         }
     }
 }

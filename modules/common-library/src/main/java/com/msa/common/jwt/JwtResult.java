@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class JwtResult {
     String userId;
     String roles;
+    boolean valid;
 }
