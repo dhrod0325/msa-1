@@ -17,10 +17,10 @@ public class NaverOAuth2ProviderService implements OAuth2ProviderService {
 
     private final WebClient webClient;
 
-    @Value("${oauth2.naver.client-id}")
+    @Value("${spring.security.oauth2.client.registration.naver.client-id}")
     private String clientId;
 
-    @Value("${oauth2.naver.redirect-uri}")
+    @Value("${spring.security.oauth2.client.registration.naver.redirect-uri}")
     private String redirectUri;
 
     @Override

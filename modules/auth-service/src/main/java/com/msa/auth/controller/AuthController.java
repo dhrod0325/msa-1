@@ -4,7 +4,6 @@ import com.msa.auth.dto.LoginRequest;
 import com.msa.auth.service.AuthService;
 import com.msa.common.jwt.AuthTokenResponse;
 import com.msa.common.jwt.JwtProvider;
-import com.msa.common.jwt.JwtResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,10 +43,7 @@ public class AuthController {
     @GetMapping("/check")
     public Mono<Boolean> check(@RequestHeader("Authorization") String bearerToken) {
         return Mono.justOrEmpty(bearerToken)
-                .map(token -> token.replace("Bearer ", ""))
-                .map(s -> {
-                    JwtResult result = jwtProvider.validate(s);
-                    return result.isValid();
-                });
+                .map(bToken -> bToken.replace("Bearer ", ""))
+                .map(token -> jwtProvider.validate(token).isValid());
     }
 }

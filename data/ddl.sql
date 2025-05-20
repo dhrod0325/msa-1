@@ -80,3 +80,15 @@ VALUES (1, 'hong123', '$2a$10$hash된값', '홍길동', 'hong@site1.com'),
        (2, 'lee456', '$2a$10$hash된값', '이순신', 'lee@site2.com');
 
 commit;
+
+CREATE TABLE oauth_user (
+                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                            provider VARCHAR(50) NOT NULL,         -- ex: kakao, naver, google
+                            provider_user_id VARCHAR(100) NOT NULL,-- ex: 카카오의 "id"
+                            email VARCHAR(255),                    -- 선택: 이메일 주소
+                            nickname VARCHAR(100),                 -- 선택: 표시 이름
+                            profile_image VARCHAR(500),            -- 선택: 프로필 URL
+                            role VARCHAR(20) DEFAULT 'USER',       -- 권한
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            UNIQUE KEY uq_provider_user (provider, provider_user_id)
+);

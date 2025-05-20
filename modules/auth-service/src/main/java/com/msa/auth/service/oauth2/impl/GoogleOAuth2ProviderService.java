@@ -14,13 +14,12 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class GoogleOAuth2ProviderService implements OAuth2ProviderService {
-
     private final WebClient webClient;
 
-    @Value("${oauth2.google.client-id}")
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
 
-    @Value("${oauth2.google.redirect-uri}")
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String redirectUri;
 
     @Override
