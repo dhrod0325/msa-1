@@ -2,6 +2,8 @@ server:
   port: 8081
 
 spring:
+  config:
+    import: classpath:secure-yml/oauth2.yml
   main:
     web-application-type: reactive
   r2dbc:
@@ -15,6 +17,17 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+
+logging:
+  level:
+    org.springframework.r2dbc.core: DEBUG
+    io.r2dbc.spi: DEBUG
+
 jwt:
   secret: a0123456789b0123456789c0123456789d
   refresh-token-validity-seconds: 1209600  # 14일

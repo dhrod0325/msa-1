@@ -1,50 +1,49 @@
 package com.msa.auth.service;
 
 import com.msa.auth.dto.LoginRequest;
-import com.msa.auth.dto.SignupRequest;
+import com.msa.auth.exception.UnauthorizedException;
 import com.msa.auth.repository.ReactiveUserRepository;
+import com.msa.auth.store.RefreshTokenStore;
 import com.msa.common.jwt.AuthTokenResponse;
 import com.msa.common.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+    private final JwtProvider jwtProvider;
+    private final RefreshTokenStore refreshTokenStore;
     private final ReactiveUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtProvider jwtProvider;
 
-    public Mono<AuthTokenResponse> login(LoginRequest req) {
-        return userRepository.findByUsername(req.getUsername())
-                .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+    public Mono<AuthTokenResponse> login(LoginRequest request) {
+        return userRepository.findByUsername(request.getUsername())
+                .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
+                .switchIfEmpty(Mono.error(new UnauthorizedException()))
                 .flatMap(user -> {
-                    if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-                        return Mono.error(new RuntimeException("Invalid password"));
-                    }
+                    String access = jwtProvider.generateAccessToken(user.getId() + "", user.getRole());
+                    String refresh = jwtProvider.generateRefreshToken(user.getId() + "", user.getRole());
 
-                    String accessToken = jwtProvider.generateToken(
-                            user.getUsername(),
-                            Map.of("roles", user.getRole()),
-                            jwtProvider.getJwtProperties().getAccessTokenValiditySeconds()
-                    );
-
-                    String refreshToken = jwtProvider.generateToken(
-                            user.getUsername(),
-                            Map.of(),
-                            jwtProvider.getJwtProperties().getRefreshTokenValiditySeconds()
-                    );
-
-                    return Mono.just(new AuthTokenResponse(accessToken, refreshToken));
+                    return refreshTokenStore.save(user.getId() + "", refresh).thenReturn(new AuthTokenResponse(access, refresh));
                 });
     }
 
-    public Mono<String> signup(SignupRequest req) {
-        return userRepository.findByUsername(req.getUsername())
-                .flatMap(existing -> Mono.error(new RuntimeException("User already exists")));
+    public Mono<AuthTokenResponse> refresh(String userId, String refreshToken) {
+        return refreshTokenStore.validate(userId, refreshToken)
+                .filter(Boolean::booleanValue)
+                .switchIfEmpty(Mono.error(new UnauthorizedException()))
+                .flatMap(valid -> {
+                    String access = jwtProvider.generateAccessToken(userId, "ROLE_USER");
+                    return Mono.just(new AuthTokenResponse(access, refreshToken));
+                });
+    }
+
+    public Mono<Void> logout(String userId) {
+        return refreshTokenStore.delete(userId);
     }
 }
