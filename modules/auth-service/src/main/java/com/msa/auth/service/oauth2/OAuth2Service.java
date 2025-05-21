@@ -3,7 +3,7 @@ package com.msa.auth.service.oauth2;
 import com.msa.auth.entity.OAuthUser;
 import com.msa.auth.entity.User;
 import com.msa.auth.repository.OauthUserRepository;
-import com.msa.auth.repository.ReactiveUserRepository;
+import com.msa.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -12,8 +12,9 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class OAuth2Service {
     private final OAuth2ProviderFactory providerFactory;
+
     private final OauthUserRepository oauthUserRepository;
-    private final ReactiveUserRepository userRepository;
+    private final UserRepository userRepository;
 
     public Mono<OAuthUser> exchangeCodeForUser(String provider, String code) {
         return providerFactory.getProvider(provider)
@@ -23,7 +24,9 @@ public class OAuth2Service {
 
     private Mono<OAuthUser> saveOrGetUser(OAuthUser oauthUser) {
         return oauthUserRepository
-                .findByProviderAndProviderUserId(oauthUser.getProvider(), oauthUser.getProviderUserId())
+                .findByProviderAndProviderUserId(
+                        oauthUser.getProvider(),
+                        oauthUser.getProviderUserId())
                 .switchIfEmpty(oauthUserRepository.save(oauthUser));
     }
 

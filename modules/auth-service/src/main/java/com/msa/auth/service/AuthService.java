@@ -2,7 +2,7 @@ package com.msa.auth.service;
 
 import com.msa.auth.dto.LoginRequest;
 import com.msa.auth.exception.UnauthorizedException;
-import com.msa.auth.repository.ReactiveUserRepository;
+import com.msa.auth.repository.UserRepository;
 import com.msa.auth.store.RefreshTokenStore;
 import com.msa.common.jwt.AuthTokenResponse;
 import com.msa.common.jwt.JwtProvider;
@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 public class AuthService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenStore refreshTokenStore;
-    private final ReactiveUserRepository userRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     public Mono<AuthTokenResponse> login(LoginRequest request) {

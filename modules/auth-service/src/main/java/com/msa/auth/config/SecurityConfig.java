@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .logout(ServerHttpSecurity.LogoutSpec::disable)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/auth/**")
+                        .pathMatchers("/auth/**", "/oauth2/**", "/auth/oauth2/callback/**")
                         .permitAll()
                         .anyExchange()
                         .authenticated())

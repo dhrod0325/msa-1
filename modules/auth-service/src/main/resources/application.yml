@@ -8,11 +8,12 @@ spring:
         registration:
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ""
+            client-secret: ${KAKAO_CLIENT_SECRET}
             client-name: Kakao
             authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/auth/oauth2/callback/kakao"
-            scope: profile_nickname, account_email
+            redirect-uri: "http://localhost:8081/auth/oauth2/callback/kakao"
+            scope:
+              - profile_nickname
           naver:
             client-id: ${NAVER_CLIENT_ID}
             client-secret: ${NAVER_CLIENT_SECRET}

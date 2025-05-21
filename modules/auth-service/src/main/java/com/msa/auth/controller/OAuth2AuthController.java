@@ -68,7 +68,7 @@ public class OAuth2AuthController {
                 .queryParam("response_type", "code")
                 .queryParam("client_id", registration.getClientId())
                 .queryParam("redirect_uri", registration.getRedirectUri())
-                .queryParam("scope", String.join(" ", registration.getScopes()))
+                .queryParam("scope", String.join(",", registration.getScopes()))
                 .build(true)
                 .toUriString();
     }
