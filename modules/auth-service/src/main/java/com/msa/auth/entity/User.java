@@ -1,5 +1,6 @@
 package com.msa.auth.entity;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,4 +20,12 @@ public class User {
     private String password;
 
     private String role = "";
+
+    private Integer loginFailCount = 0;
+    private LocalDateTime accountLockedUntil;
+    private LocalDateTime lastPasswordChangeDate;
+    private String currentSessionId;
+    private LocalDateTime lastLoginDate;
+
+    private String accountStatus = "ACTIVE";
 }

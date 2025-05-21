@@ -25,4 +25,11 @@ public class RefreshTokenStore {
     public Mono<Void> delete(String userId) {
         return redisTemplate.delete("refresh:" + userId).then();
     }
+
+    // TTL: 1일
+    public Mono<Void> saveSession(String userId, String sessionId) {
+        return redisTemplate.opsForValue()
+                .set("session:" + userId, sessionId, Duration.ofDays(1))
+                .then();
+    }
 }

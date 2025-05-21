@@ -1,4 +1,4 @@
-package com.msa.auth.service.oauth2;
+package com.msa.auth.oauth2;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;

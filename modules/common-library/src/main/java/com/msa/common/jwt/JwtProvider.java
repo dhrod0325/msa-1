@@ -41,6 +41,14 @@ public class JwtProvider {
         return generateToken(subject, claims, jwtProperties.getAccessTokenValiditySeconds());
     }
 
+    public String generateAccessToken(String subject, String role, String sessionId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", role);
+        claims.put("sessionId", sessionId);
+
+        return generateAccessToken(subject, claims);
+    }
+
     public String generateRefreshToken(String subject, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", role);

@@ -8,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @Slf4j
 @SpringBootTest
 @AutoConfigureWebTestClient
+@ActiveProfiles("test")
 class AuthControllerTest {
 
     @Autowired
@@ -44,7 +46,7 @@ class AuthControllerTest {
 
     @Test
     void 로그인성공() {
-        LoginRequest request = new LoginRequest("admin", "1234");
+        LoginRequest request = new LoginRequest("admin", "12345");
 
         AuthTokenResponse response = webTestClient.post()
                 .uri("/auth/login")
@@ -59,5 +61,4 @@ class AuthControllerTest {
 
         log.info("로그인 응답: {}", response);
     }
-
 }

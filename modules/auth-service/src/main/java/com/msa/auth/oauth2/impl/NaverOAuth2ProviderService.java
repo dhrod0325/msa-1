@@ -1,8 +1,8 @@
-package com.msa.auth.service.oauth2.impl;
+package com.msa.auth.oauth2.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.msa.auth.entity.OAuthUser;
-import com.msa.auth.service.oauth2.OAuth2ProviderService;
+import com.msa.auth.oauth2.OAuth2ProviderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;

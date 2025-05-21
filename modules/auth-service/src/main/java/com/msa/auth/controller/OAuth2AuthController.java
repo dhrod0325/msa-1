@@ -1,7 +1,7 @@
 package com.msa.auth.controller;
 
 import com.msa.auth.dto.AuthTokenResponse;
-import com.msa.auth.service.oauth2.OAuth2Service;
+import com.msa.auth.oauth2.OAuth2Service;
 import com.msa.auth.store.RefreshTokenStore;
 import com.msa.common.jwt.JwtProvider;
 import java.net.URI;

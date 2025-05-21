@@ -3,15 +3,18 @@ SET NAMES utf8mb4;
 DROP TABLE IF EXISTS `event_definitions`;
 CREATE TABLE `event_definitions`
 (
-    `id`          bigint(20) NOT NULL AUTO_INCREMENT,
+    `id`          bigint(20)   NOT NULL AUTO_INCREMENT,
     `service`     varchar(255) NOT NULL,
     `event_code`  varchar(100) NOT NULL,
-    `description` varchar(255) DEFAULT NULL,
-    `enabled`     tinyint(1) DEFAULT 1,
-    `created_at`  timestamp NULL DEFAULT current_timestamp(),
+    `description` varchar(255)      DEFAULT NULL,
+    `enabled`     tinyint(1)        DEFAULT 1,
+    `created_at`  timestamp    NULL DEFAULT current_timestamp(),
     PRIMARY KEY (`id`),
     UNIQUE KEY `event_code` (`event_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 2
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci;
 
 BEGIN;
 INSERT INTO `event_definitions` (`id`, `service`, `event_code`, `description`, `enabled`, `created_at`)
@@ -21,13 +24,32 @@ COMMIT;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`
 (
-    `id`       bigint(20) NOT NULL AUTO_INCREMENT,
-    `username` varchar(255) NOT NULL,
-    `password` varchar(255) NOT NULL,
-    `role`     varchar(255) DEFAULT NULL,
+    `id`                        BIGINT(20)   NOT NULL AUTO_INCREMENT,
+    `username`                  VARCHAR(255) NOT NULL,
+    `password`                  VARCHAR(255) NOT NULL,
+    `role`                      VARCHAR(50)  DEFAULT NULL,
+
+    -- 로그인 실패 관련
+    `login_fail_count`          INT          DEFAULT 0,
+    `account_locked_until`      DATETIME     DEFAULT NULL,
+
+    -- 비밀번호 변경 주기
+    `last_password_change_date` DATETIME     DEFAULT NULL,
+
+    -- 동시 로그인 제한을 위한 토큰/세션 UUID (선택사항)
+    `current_session_id`        VARCHAR(100) DEFAULT NULL,
+    -- 휴면 계정 처리
+    `last_login_date`           DATETIME     DEFAULT NULL,
+    `account_status`            VARCHAR(20)  DEFAULT 'ACTIVE', -- ACTIVE, DORMANT, LOCKED 등
+
+    `created_at`                DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`                DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
     PRIMARY KEY (`id`),
     UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci;
 
 BEGIN;
 INSERT INTO `users` (`id`, `username`, `password`, `role`)
@@ -55,10 +77,10 @@ CREATE TABLE site_user
     password   VARCHAR(255) NOT NULL COMMENT 'BCrypt 암호화된 비밀번호',
     name       VARCHAR(100) NOT NULL,
     email      VARCHAR(100),
-    role       ENUM('USER', 'MODERATOR') DEFAULT 'USER',
-    is_enabled BOOLEAN  DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    role       ENUM ('USER', 'MODERATOR') DEFAULT 'USER',
+    is_enabled BOOLEAN                    DEFAULT TRUE,
+    created_at DATETIME                   DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME                   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_site_user_site FOREIGN KEY (site_id)
         REFERENCES site (id)
@@ -81,14 +103,15 @@ VALUES (1, 'hong123', '$2a$10$hash된값', '홍길동', 'hong@site1.com'),
 
 commit;
 
-CREATE TABLE oauth_user (
-                            id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                            provider VARCHAR(50) NOT NULL,         -- ex: kakao, naver, google
-                            provider_user_id VARCHAR(100) NOT NULL,-- ex: 카카오의 "id"
-                            email VARCHAR(255),                    -- 선택: 이메일 주소
-                            nickname VARCHAR(100),                 -- 선택: 표시 이름
-                            profile_image VARCHAR(500),            -- 선택: 프로필 URL
-                            role VARCHAR(20) DEFAULT 'USER',       -- 권한
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            UNIQUE KEY uq_provider_user (provider, provider_user_id)
+CREATE TABLE oauth_user
+(
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    provider         VARCHAR(50)  NOT NULL,      -- ex: kakao, naver, google
+    provider_user_id VARCHAR(100) NOT NULL,-- ex: 카카오의 "id"
+    email            VARCHAR(255),               -- 선택: 이메일 주소
+    nickname         VARCHAR(100),               -- 선택: 표시 이름
+    profile_image    VARCHAR(500),               -- 선택: 프로필 URL
+    role             VARCHAR(20) DEFAULT 'USER', -- 권한
+    created_at       TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_provider_user (provider, provider_user_id)
 );

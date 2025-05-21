@@ -1,4 +1,4 @@
-package com.msa.auth.service.oauth2;
+package com.msa.auth.oauth2;
 
 import com.msa.auth.entity.OAuthUser;
 import com.msa.auth.entity.User;
