@@ -1,4 +1,4 @@
-package com.msa.auth.service.login.processor;
+package com.msa.auth.service.login;
 
 
 import com.msa.auth.dto.LoginRequest;

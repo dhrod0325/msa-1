@@ -83,12 +83,23 @@ public class JwtProvider {
             Claims claims = validateAndGetClaims(token);
             String userId = claims.getSubject();
             String roles = claims.get("roles", String.class);
+            String sessionId = claims.get("sessionId", String.class);
 
-            return new JwtResult(userId, roles, true);
+            return new JwtResult(userId, roles, true, sessionId);
         } catch (JwtException e) {
             log.error(e.getMessage(), e);
+            return new JwtResult(null, null, false, null);
+        }
+    }
 
-            return new JwtResult(null, null, false);
+    public long getRemainingSeconds(String token) {
+        try {
+            Claims claims = validateAndGetClaims(token);
+            Date expiration = claims.getExpiration();
+            long remaining = (expiration.getTime() - System.currentTimeMillis()) / 1000;
+            return Math.max(remaining, 0);
+        } catch (Exception e) {
+            return 0;
         }
     }
 }

@@ -11,4 +11,5 @@ public class JwtResult {
     String userId;
     String roles;
     boolean valid;
+    String sessionId;
 }
