@@ -5,16 +5,19 @@ import com.msa.auth.entity.OAuthUser;
 import com.msa.auth.oauth2.OAuth2ProviderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
 public class GoogleOAuth2ProviderService implements OAuth2ProviderService {
-    private final WebClient webClient;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
@@ -22,42 +25,77 @@ public class GoogleOAuth2ProviderService implements OAuth2ProviderService {
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String redirectUri;
 
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    private String clientSecret;
+
     @Override
     public String providerName() {
         return "google";
     }
 
+    // 동기 방식으로 OAuthUser 반환
     @Override
-    public Mono<OAuthUser> exchange(String code) {
-        return getAccessToken(code)
-                .flatMap(this::getProfile);
+    public OAuthUser exchangeBlocking(String code) {
+        String accessToken = getAccessToken(code);
+        return getProfile(accessToken);
     }
 
-    private Mono<String> getAccessToken(String code) {
-        return webClient.post()
-                .uri("https://oauth2.googleapis.com/token")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData("grant_type", "authorization_code")
-                        .with("client_id", clientId)
-                        .with("redirect_uri", redirectUri)
-                        .with("code", code))
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .map(json -> json.get("access_token").asText());
+    private String getAccessToken(String code) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        String tokenUrl = "https://oauth2.googleapis.com/token";
+
+        HttpEntity<String> request = new HttpEntity<>(
+                UriComponentsBuilder.newInstance()
+                        .queryParam("grant_type", "authorization_code")
+                        .queryParam("client_id", clientId)
+                        .queryParam("client_secret", clientSecret)
+                        .queryParam("redirect_uri", redirectUri)
+                        .queryParam("code", code)
+                        .build()
+                        .getQuery(),
+                headers
+        );
+
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                tokenUrl,
+                HttpMethod.POST,
+                request,
+                JsonNode.class
+        );
+
+        JsonNode json = response.getBody();
+        if (json == null || json.get("access_token") == null) {
+            throw new IllegalStateException("Access token 응답 오류");
+        }
+
+        return json.get("access_token").asText();
     }
 
-    private Mono<OAuthUser> getProfile(String token) {
-        return webClient.get()
-                .uri("https://www.googleapis.com/oauth2/v2/userinfo")
-                .header("Authorization", "Bearer " + token)
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .map(profile -> new OAuthUser(
-                        null,
-                        "google",
-                        profile.get("id").asText(),
-                        profile.path("email").asText(""),
-                        profile.path("name").asText("")
-                ));
+    private OAuthUser getProfile(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                "https://www.googleapis.com/oauth2/v2/userinfo",
+                HttpMethod.GET,
+                request,
+                JsonNode.class
+        );
+
+        JsonNode profile = response.getBody();
+        if (profile == null || profile.get("id") == null) {
+            throw new IllegalStateException("프로필 정보 응답 오류");
+        }
+
+        return new OAuthUser(
+                null,
+                "google",
+                profile.get("id").asText(),
+                profile.path("email").asText(""),
+                profile.path("name").asText("")
+        );
     }
 }

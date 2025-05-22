@@ -1,6 +1,5 @@
 package com.msa.auth.service.login;
 
-
 import com.msa.auth.dto.LoginRequest;
 import com.msa.auth.entity.User;
 import com.msa.auth.exception.UnauthorizedException;
@@ -12,37 +11,33 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
 public class LoginProcessor {
-    //LoginStrategy 는 구현체 리스트가 자동 주입됨
     private final List<LoginStrategy> strategies;
-
     private final TokenGenerator tokenGenerator;
     private final UserRepository userRepository;
 
-    public Mono<AuthTokenResponse> login(LoginRequest request) {
-        return userRepository.findByUsername(request.getUsername())
-                .switchIfEmpty(Mono.error(new UnauthorizedException("사용자를 찾을 수 없습니다.")))
-                .flatMap(user -> applyStrategies(user, request))
-                .flatMap(user -> {
-                    user.setLoginFailCount(0);
-                    user.setAccountLockedUntil(null);
-                    user.setLastLoginDate(LocalDateTime.now());
-                    return userRepository.save(user);
-                })
-                .flatMap(tokenGenerator::generate);
+    public AuthTokenResponse login(LoginRequest request) {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UnauthorizedException("사용자를 찾을 수 없습니다."));
+
+        applyStrategies(user, request); // 로그인 전략 수행
+
+        // 사용자 상태 업데이트
+        user.setLoginFailCount(0);
+        user.setAccountLockedUntil(null);
+        user.setLastLoginDate(LocalDateTime.now());
+
+        userRepository.save(user);
+
+        return tokenGenerator.generate(user);
     }
 
-    private Mono<User> applyStrategies(User user, LoginRequest request) {
-        Mono<User> result = Mono.just(user);
-
+    private void applyStrategies(User user, LoginRequest request) {
         for (LoginStrategy strategy : strategies) {
-            result = result.flatMap(u -> strategy.apply(u, request));
+            strategy.apply(user, request); // 동기 메서드로 가정
         }
-
-        return result;
     }
 }

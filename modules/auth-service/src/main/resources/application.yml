@@ -44,10 +44,12 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v2/userinfo
             user-name-attribute: id
-  main:
-    web-application-type: reactive
-  r2dbc:
-    url: r2dbc:mariadb://localhost:23306/test
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  datasource:
+    url: jdbc:mariadb://localhost:23306/test
     username: admin
     password: 1234
   kafka:
@@ -61,7 +63,6 @@ spring:
     redis:
       host: localhost
       port: 6379
-
 
 logging:
   level:

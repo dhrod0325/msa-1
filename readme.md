@@ -89,3 +89,74 @@ JWT 발급 및 필터
 - Kafka 이벤트 표준화 (eventType, version 등)
 - Spring Cloud Bus로 설정 핫리로드
 - Prometheus / Zipkin 적용
+
+--------------------------------
+
+
+✅ 다음 우선순위 정리
+
+1. 🔍 통합 테스트 작성 (E2E 테스트)
+   목표: 전체 인증 흐름을 검증
+
+포인트:
+
+OAuth2 로그인 요청 → JWT/세션 발급 확인
+
+Kafka 이벤트가 정상 발행되는지 확인 (@EmbeddedKafka 사용 권장)
+
+DB 상태 검증 (User, Session 저장 여부)
+
+툴 추천: SpringBootTest + WebTestClient, @Testcontainers, @EmbeddedKafka
+
+2. 📘 Swagger(OpenAPI) 문서화
+   목표: 인증 API를 프론트/타팀 개발자와 공유
+
+포인트:
+
+/auth/oauth2/authorize, /auth/oauth2/callback/{provider} 등 주요 API 명세화
+
+JWT/Session 발급 응답 구조 명시
+
+라이브러리: springdoc-openapi-webflux-ui
+
+yaml
+복사
+편집
+
+# build.gradle
+
+implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.2.0'
+
+3. 🤝 user-service와 연동
+   목표: 로그인 시 user-service에서 사용자 정보 조회 또는 등록/수정
+
+포인트:
+
+user-service에 WebClient 또는 FeignClient 호출
+
+로그인 시 사용자 존재하지 않으면 user-service에 최초 등록 (이벤트 기반 선호)
+
+Kafka → user-service → DB 반영까지 흐름 확인
+
+4. 🧪 user-service 단의 통합 대응
+   KafkaConsumer에서 받은 사용자 이벤트 처리 로직 완성
+
+사용자 존재 여부 체크 후 insert or update
+
+user-service에서 사용자 조회 시 토큰 기반 인증 체크 (Authorization: Bearer ...)
+
+auth-service → user-service WebClient 연동 테스트
+
+5. 🔐 보안 관련 보강
+   Redis 기반 Session TTL 설정
+
+Refresh Token 저장소 보안 검토 (Redis → 암호화 여부, 탈취 방지)
+
+JWT 서명 비밀키 관리 (config-server 또는 HashiCorp Vault 연동 고려)
+
+6. 🛠 운영 편의성 도구
+   로그 추적용 Correlation ID 연동 (gateway → downstream 서비스까지)
+
+Kafka 이벤트 추적 및 실패 재처리 구조 정립
+
+actuator + prometheus + grafana 연동 (optional)

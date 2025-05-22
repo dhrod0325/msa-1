@@ -18,4 +18,8 @@ public class SiteUserCreatedEvent implements BaseEvent {
     private String username;
     private String encodedPassword;
     private String role;
+    private String email;
+
+    private String provider;
+    private String providerUserId;
 }

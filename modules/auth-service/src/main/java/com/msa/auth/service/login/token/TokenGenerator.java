@@ -7,7 +7,6 @@ import com.msa.common.jwt.JwtProvider;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
@@ -15,13 +14,16 @@ public class TokenGenerator {
     private final JwtProvider jwtProvider;
     private final RefreshTokenStore refreshTokenStore;
 
-    public Mono<AuthTokenResponse> generate(User user) {
+    public AuthTokenResponse generate(User user) {
         String sessionId = UUID.randomUUID().toString();
-        String access = jwtProvider.generateAccessToken(user.getId().toString(), user.getRole(), sessionId);
-        String refresh = jwtProvider.generateRefreshToken(user.getId().toString(), user.getRole());
+        String userId = user.getId().toString();
 
-        return refreshTokenStore.save(user.getId().toString(), refresh)
-                .then(refreshTokenStore.saveSession(user.getId().toString(), sessionId))
-                .thenReturn(new AuthTokenResponse(access, refresh));
+        String access = jwtProvider.generateAccessToken(userId, user.getRole(), sessionId);
+        String refresh = jwtProvider.generateRefreshToken(userId, user.getRole());
+
+        refreshTokenStore.save(userId, refresh);           // 동기 저장
+        refreshTokenStore.saveSession(userId, sessionId);  // 동기 저장
+
+        return new AuthTokenResponse(access, refresh);
     }
 }

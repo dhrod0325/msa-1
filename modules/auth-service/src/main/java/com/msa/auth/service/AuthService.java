@@ -8,7 +8,6 @@ import com.msa.common.jwt.AuthTokenResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
@@ -18,15 +17,15 @@ public class AuthService {
     private final RefreshTokenProcessor refreshTokenProcessor;
     private final LogoutProcessor logoutProcessor;
 
-    public Mono<AuthTokenResponse> login(LoginRequest request) {
+    public AuthTokenResponse login(LoginRequest request) {
         return loginProcessor.login(request);
     }
 
-    public Mono<AuthTokenResponse> refresh(String userId, String refreshToken) {
+    public AuthTokenResponse refresh(String userId, String refreshToken) {
         return refreshTokenProcessor.refresh(userId, refreshToken);
     }
 
-    public Mono<Void> logout(String userId, String accessToken) {
-        return logoutProcessor.logout(userId, accessToken);
+    public void logout(String userId, String accessToken) {
+        logoutProcessor.logout(userId, accessToken);
     }
 }

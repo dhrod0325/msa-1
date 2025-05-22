@@ -1,19 +1,22 @@
 package com.msa.auth.filter.jwt;
 
 import com.msa.common.jwt.JwtResult;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtValidationFilter implements WebFilter {
+public class JwtValidationFilter implements Filter {
 
     private final TokenExtractor tokenExtractor;
     private final AccessTokenBlacklistValidator blacklistValidator;
@@ -21,37 +24,48 @@ public class JwtValidationFilter implements WebFilter {
     private final SessionIdValidator sessionIdValidator;
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String token = tokenExtractor.extract(exchange);
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
+
+        String token = tokenExtractor.extract(request);
         if (token == null) {
-            return chain.filter(exchange);
+            chain.doFilter(request, response);
+            return;
         }
 
-        return blacklistValidator.isBlacklisted(token)
-                .flatMap(blacklisted -> {
-                    if (blacklisted) {
-                        return unauthorized(exchange);
-                    }
+        try {
+            if (blacklistValidator.isBlacklisted(token)) {
+                unauthorized(response);
+                return;
+            }
 
-                    return jwtValidator.validate(token);
-                })
-                .switchIfEmpty(unauthorized(exchange))
-                .cast(JwtResult.class)
-                .flatMap(jwtResult -> {
-                    String userId = jwtResult.getUserId();
-                    String sessionId = jwtResult.getSessionId();
-                    if (userId == null || sessionId == null) {
-                        return unauthorized(exchange);
-                    }
+            JwtResult jwtResult = jwtValidator.validate(token);
+            if (jwtResult == null ||
+                    jwtResult.getUserId() == null ||
+                    jwtResult.getSessionId() == null) {
+                unauthorized(response);
+                return;
+            }
 
-                    return sessionIdValidator.isValid(userId, sessionId)
-                            .flatMap(valid -> valid ? chain.filter(exchange) : unauthorized(exchange));
-                })
-                .onErrorResume(e -> unauthorized(exchange));
+            boolean validSession = sessionIdValidator.isValid(jwtResult.getUserId(), jwtResult.getSessionId());
+            if (!validSession) {
+                unauthorized(response);
+                return;
+            }
+
+            // 통과
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error("JWT 검증 중 예외 발생", e);
+            unauthorized(response);
+        }
     }
 
-    private Mono<Void> unauthorized(ServerWebExchange exchange) {
-        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-        return exchange.getResponse().setComplete();
+    private void unauthorized(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Unauthorized");
     }
 }

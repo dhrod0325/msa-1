@@ -1,6 +1,5 @@
 package com.msa.auth.service.login.strategy.impl;
 
-
 import com.msa.auth.dto.LoginRequest;
 import com.msa.auth.entity.User;
 import com.msa.auth.exception.UnauthorizedException;
@@ -10,7 +9,6 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 @Component
 @RequiredArgsConstructor
@@ -19,16 +17,20 @@ public class PasswordVerifier implements LoginStrategy {
     private final UserRepository userRepository;
 
     @Override
-    public Mono<User> apply(User user, LoginRequest request) {
+    public void apply(User user, LoginRequest request) {
         if (!encoder.matches(request.getPassword(), user.getPassword())) {
             int fail = user.getLoginFailCount() + 1;
             user.setLoginFailCount(fail);
+
             if (fail >= 5) {
                 user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(30));
             }
-            return userRepository.save(user).then(Mono.error(new UnauthorizedException("비밀번호가 일치하지 않습니다.")));
-        }
 
-        return Mono.just(user);
+            // 실패 상태 저장
+            userRepository.save(user);
+
+            throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
+        }
+        // 일치하면 아무 것도 하지 않음
     }
 }

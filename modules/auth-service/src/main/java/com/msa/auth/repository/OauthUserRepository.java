@@ -1,9 +1,11 @@
 package com.msa.auth.repository;
 
 import com.msa.auth.entity.OAuthUser;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import reactor.core.publisher.Mono;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface OauthUserRepository extends ReactiveCrudRepository<OAuthUser, Long> {
-    Mono<OAuthUser> findByProviderAndProviderUserId(String provider, String providerUserId);
+@Repository
+public interface OauthUserRepository extends JpaRepository<OAuthUser, Long> {
+    Optional<OAuthUser> findByProviderAndProviderUserId(String provider, String providerUserId);
 }
