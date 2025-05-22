@@ -1,6 +1,14 @@
 server:
   port: 8081
 
+springdoc:
+  api-docs:
+    path: /v1/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
 spring:
   security:
     oauth2:

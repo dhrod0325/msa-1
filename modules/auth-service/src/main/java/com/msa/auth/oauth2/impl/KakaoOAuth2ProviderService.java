@@ -39,7 +39,7 @@ public class KakaoOAuth2ProviderService implements OAuth2ProviderService {
     }
 
     @Override
-    public OAuthUser exchangeBlocking(String code) {
+    public OAuthUser exchange(String code) {
         String accessToken = getAccessToken(code);
         return getProfile(accessToken);
     }

@@ -35,7 +35,7 @@ public class GoogleOAuth2ProviderService implements OAuth2ProviderService {
 
     // 동기 방식으로 OAuthUser 반환
     @Override
-    public OAuthUser exchangeBlocking(String code) {
+    public OAuthUser exchange(String code) {
         String accessToken = getAccessToken(code);
         return getProfile(accessToken);
     }

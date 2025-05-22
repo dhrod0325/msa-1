@@ -1,86 +1,61 @@
 package com.msa.auth.controller;
 
 import com.msa.auth.dto.AuthTokenResponse;
-import com.msa.auth.oauth2.OAuth2Service;
-import com.msa.auth.store.RefreshTokenStore;
-import com.msa.common.jwt.JwtProvider;
+import com.msa.auth.oauth2.OAuth2LoginService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @RestController
 @RequestMapping("/auth/oauth2")
 @RequiredArgsConstructor
 public class OAuth2AuthController {
+    private final OAuth2LoginService auth2LoginService;
 
-    private final ClientRegistrationRepository clientRegistrationRepository;
-    private final JwtProvider jwtProvider;
-    private final RefreshTokenStore refreshTokenStore;
-    private final OAuth2Service oAuth2Service;
-
+    @Operation(
+            summary = "OAuth2 인증 요청",
+            description = "provider(kakao, naver, google)에 따라 인증 페이지로 리다이렉트합니다.",
+            parameters = {
+                    @Parameter(name = "provider", description = "OAuth2 Provider", example = "kakao")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "302", description = "해당 Provider 인증 페이지로 리다이렉트됨"),
+                    @ApiResponse(responseCode = "400", description = "지원되지 않는 Provider")
+            }
+    )
     @GetMapping("/authorization/{provider}")
     public void redirectToProvider(@PathVariable String provider, HttpServletResponse response) throws IOException {
-        ClientRegistration registration = clientRegistrationRepository.findByRegistrationId(provider);
-        if (registration == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unknown provider: " + provider);
-            return;
-        }
-
-        String authorizationUri = getAuthorizationUri(registration, provider);
+        String authorizationUri = auth2LoginService.getAuthorizationUri(provider);
         response.sendRedirect(authorizationUri);
     }
 
+    @Operation(
+            summary = "OAuth2 콜백",
+            description = "OAuth2 provider에서 인증 후 전달된 code로 사용자 정보를 가져와 로그인 처리합니다.",
+            parameters = {
+                    @Parameter(name = "provider", description = "OAuth2 Provider", example = "kakao"),
+                    @Parameter(name = "code", description = "Authorization Code", example = "abc123")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "JWT 토큰 반환"),
+                    @ApiResponse(responseCode = "400", description = "OAuth 사용자 정보 없음"),
+                    @ApiResponse(responseCode = "404", description = "가입되지 않은 사용자 → 가입 이벤트 발행")
+            }
+    )
     @GetMapping("/callback/{provider}")
     public ResponseEntity<?> callback(@PathVariable String provider, @RequestParam String code) {
-        log.info("call callback {}", provider);
-
-        var oAuthUser = oAuth2Service.exchangeCodeForUserBlocking(provider, code);
-        if (oAuthUser == null) {
-            return ResponseEntity.status(400).body("OAuth 사용자 정보를 가져올 수 없습니다.");
-        }
-
-        var user = oAuth2Service.findUserByOAuthUserIdBlocking(oAuthUser.getProviderUserId());
-
-        if (user == null) {
-            oAuth2Service.publishSignupEventBlocking(oAuthUser);
-            return ResponseEntity.status(404).body("사용자가 존재하지 않아 가입 이벤트를 발행했습니다.");
-        }
-
-        String accessToken = jwtProvider.generateAccessToken(user.getId() + "", user.getRole());
-        String refreshToken = jwtProvider.generateRefreshToken(user.getId() + "", user.getRole());
-
-        log.info("callback : {}, {}", accessToken, refreshToken);
-
-        refreshTokenStore.save(user.getId() + "", refreshToken); // 동기 저장
-
-        return ResponseEntity.ok(new AuthTokenResponse(accessToken, refreshToken));
-    }
-
-    private String getAuthorizationUri(ClientRegistration registration, String provider) {
-        String baseAuthUri = switch (provider) {
-            case "kakao" -> "https://kauth.kakao.com/oauth/authorize";
-            case "naver" -> "https://nid.naver.com/oauth2.0/authorize";
-            case "google" -> "https://accounts.google.com/o/oauth2/v2/auth";
-            default -> registration.getProviderDetails().getAuthorizationUri();
-        };
-
-        return UriComponentsBuilder.fromUriString(baseAuthUri)
-                .queryParam("response_type", "code")
-                .queryParam("client_id", registration.getClientId())
-                .queryParam("redirect_uri", registration.getRedirectUri())
-                .queryParam("scope", String.join(",", registration.getScopes()))
-                .build(true)
-                .toUriString();
+        AuthTokenResponse response = auth2LoginService.handleCallback(provider, code);
+        return ResponseEntity.ok(response);
     }
 }

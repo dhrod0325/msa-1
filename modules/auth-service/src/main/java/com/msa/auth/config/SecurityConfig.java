@@ -15,7 +15,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtValidationFilter jwtValidationFilter;
 
     @Bean
@@ -32,6 +31,12 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(request -> {
+                            String ip = request.getRemoteAddr();
+                            return (ip.equals("127.0.0.1") || ip.equals("0:0:0:0:0:0:0:1"));
+                        }).permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+                        .denyAll() // 외부 차단
                         .requestMatchers("/auth/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -5,5 +5,5 @@ import com.msa.auth.entity.OAuthUser;
 public interface OAuth2ProviderService {
     String providerName();
 
-    OAuthUser exchangeBlocking(String code);
+    OAuthUser exchange(String code);
 }
